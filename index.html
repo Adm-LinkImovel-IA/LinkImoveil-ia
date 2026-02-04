@@ -6,10 +6,15 @@
     <title>Login - LinkImóvel IA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f1f5f9; height: 100vh; display: flex; align-items: center; }
-        .auth-card { width: 100%; max-width: 400px; padding: 2rem; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; }
-        .btn-primary { background: #2563eb; border: none; padding: 12px; font-weight: 600; }
-        .brand-logo { font-weight: 800; color: #2563eb; text-align: center; margin-bottom: 2rem; display: block; text-decoration: none; }
+        body { background-color: #f1f5f9; height: 100vh; display: flex; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .auth-card { width: 100%; max-width: 400px; padding: 2.5rem; border-radius: 20px; background: white; box-shadow: 0 15px 35px rgba(0,0,0,0.1); margin: auto; }
+        .btn-primary { background: #2563eb; border: none; padding: 14px; font-weight: 700; border-radius: 10px; transition: all 0.3s ease; }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:disabled { background: #94a3b8; }
+        .brand-logo { font-weight: 800; color: #2563eb; text-align: center; margin-bottom: 2rem; display: block; text-decoration: none; letter-spacing: -1px; }
+        .form-control { padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .alert { display: none; margin-top: 1rem; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -19,70 +24,136 @@
     
     <h5 class="text-center mb-4" id="auth-title">Acesse sua conta</h5>
 
+    <div id="auth-alert" class="alert alert-danger" role="alert"></div>
+
     <form id="auth-form">
         <div class="mb-3">
-            <label class="form-label">E-mail</label>
-            <input type="email" id="email" class="form-control" required placeholder="seu@email.com">
+            <label class="form-label fw-semibold">E-mail de Acesso</label>
+            <input type="email" id="email" class="form-control" required placeholder="exemplo@linkimovel.com.br" autocomplete="email">
         </div>
-        <div class="mb-3">
-            <label class="form-label">Senha</label>
-            <input type="password" id="password" class="form-control" required placeholder="******">
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Senha</label>
+            <input type="password" id="password" class="form-control" required placeholder="Sua senha secreta" autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-primary w-100 mb-3" id="btn-auth">Entrar</button>
+        <button type="submit" class="btn btn-primary w-100 mb-3" id="btn-auth">Entrar no Sistema</button>
     </form>
 
-    <div class="text-center">
-        <small class="text-muted" id="toggle-text">Não tem conta?</small>
-        <a href="#" class="small fw-bold" id="toggle-auth">Criar conta grátis</a>
+    <div class="text-center mt-3">
+        <span class="text-muted" id="toggle-text">Ainda não tem acesso?</span>
+        <br>
+        <a href="#" class="text-decoration-none fw-bold" id="toggle-auth" style="color: #2563eb;">Solicitar Cadastro Grátis</a>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    // Configuração do Supabase (Substitua pelos seus dados do projeto)
-    const supabaseUrl = 'https://xmjxfcwnytguwntvloja.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtanhmY3dueXRndXdudHZsb2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzA4MDEsImV4cCI6MjA4NTgwNjgwMX0.HSJbuCrnL7D3AlEpqlxq28yowHmUlqZyQSOCJRrmgOM';
-    const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
 
+<script>
+    // 1. CONFIGURAÇÃO DO AMBIENTE
+    const SUPABASE_URL = 'SUA_URL_AQUI'; // <--- INSIRA AQUI
+    const SUPABASE_KEY = 'SUA_KEY_AQUI'; // <--- INSIRA AQUI
+    
+    // Inicialização robusta usando o objeto global do navegador
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. MAPEAMENTO DE ELEMENTOS
     const authForm = document.getElementById('auth-form');
     const authTitle = document.getElementById('auth-title');
     const btnAuth = document.getElementById('btn-auth');
     const toggleAuth = document.getElementById('toggle-auth');
-    let isLogin = true;
+    const toggleText = document.getElementById('toggle-text');
+    const authAlert = document.getElementById('auth-alert');
+    let isLoginMode = true;
 
-    // Alternar entre Login e Cadastro
+    // 3. VERIFICAR SE JÁ EXISTE SESSÃO ATIVA (Evita login repetido)
+    async function checkExistingSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            console.log("Sessão ativa encontrada. Redirecionando...");
+            window.location.href = 'perfil.html';
+        }
+    }
+    checkExistingSession();
+
+    // 4. FUNÇÃO PARA EXIBIR ERROS NA TELA
+    function showError(message) {
+        authAlert.innerText = message;
+        authAlert.style.display = 'block';
+        setTimeout(() => { authAlert.style.display = 'none'; }, 5000);
+    }
+
+    // 5. ALTERNAR ENTRE LOGIN E CADASTRO
     toggleAuth.addEventListener('click', (e) => {
         e.preventDefault();
-        isLogin = !isLogin;
-        authTitle.innerText = isLogin ? 'Acesse sua conta' : 'Crie sua conta grátis';
-        btnAuth.innerText = isLogin ? 'Entrar' : 'Cadastrar';
-        document.getElementById('toggle-text').innerText = isLogin ? 'Não tem conta?' : 'Já tem conta?';
-        toggleAuth.innerText = isLogin ? 'Criar conta grátis' : 'Fazer Login';
+        isLoginMode = !isLoginMode;
+        
+        authTitle.innerText = isLoginMode ? 'Acesse sua conta' : 'Crie sua conta de Corretor';
+        btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
+        toggleText.innerText = isLoginMode ? 'Ainda não tem acesso?' : 'Já possui uma conta?';
+        toggleAuth.innerText = isLoginMode ? 'Solicitar Cadastro Grátis' : 'Voltar para o Login';
+        authAlert.style.display = 'none';
     });
 
+    // 6. LÓGICA DE SUBMISSÃO (O MOTOR)
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
+        
+        // Bloqueia o botão para evitar duplicidade
+        btnAuth.disabled = true;
+        btnAuth.innerText = 'Processando...';
+        authAlert.style.display = 'none';
+
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
-        if (isLogin) {
-            // LOGIN
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) alert(error.message);
-            else window.location.href = 'perfil.html'; // Redireciona para o Perfil
-        } else {
-            // CADASTRO
-            const { data, error } = await supabase.auth.signUp({ 
-                email, 
-                password,
-                options: {
-                    data: { plano: 'FREE' } // Metadados iniciais
+        try {
+            if (isLoginMode) {
+                // EXECUTAR LOGIN
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Sucesso: Redireciona
+                window.location.href = 'perfil.html';
+
+            } else {
+                // EXECUTAR CADASTRO
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: { 
+                            plano: 'FREE',
+                            role: 'USER'
+                        },
+                        // Define para onde o usuário volta se precisar confirmar e-mail
+                        emailRedirectTo: window.location.origin + '/perfil.html'
+                    }
+                });
+
+                if (error) throw error;
+
+                if (data.user && data.session) {
+                    // Se o Auto-confirm estiver ON, ele loga direto
+                    window.location.href = 'perfil.html';
+                } else {
+                    alert('Cadastro realizado! Por favor, verifique seu e-mail para ativar a conta.');
+                    isLoginMode = true;
+                    toggleAuth.click(); // Volta para tela de login
                 }
-            });
-            if (error) alert(error.message);
-            else alert('Verifique seu e-mail para confirmar o cadastro!');
+            }
+        } catch (err) {
+            console.error("Erro na autenticação:", err.message);
+            showError("Falha na autenticação: " + err.message);
+        } finally {
+            btnAuth.disabled = false;
+            btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
         }
     });
 </script>
+
 </body>
 </html>
