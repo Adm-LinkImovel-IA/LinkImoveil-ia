@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LinkImóvel IA</title>
+    <title>Login - Link Imóvel IA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f1f5f9; height: 100vh; display: flex; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -20,7 +20,7 @@
 <body>
 
 <div class="auth-card">
-    <a href="/" class="brand-logo fs-3">LINKIMÓVEL <span class="text-dark">IA</span></a>
+    <a href="/" class="brand-logo fs-3">LINK IMÓVEL <span class="text-dark">IA</span></a>
     
     <h5 class="text-center mb-4" id="auth-title">Acesse sua conta</h5>
 
@@ -49,116 +49,5 @@
 
 <script src="auth.js"></script>
 
-<script>
-    // 1. CONFIGURAÇÃO DO AMBIENTE
-    const SUPABASE_URL = 'https://xmjxfcwnytguwntvloja.supabase.co'; // <--- INSIRA AQUI
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtanhmY3dueXRndXdudHZsb2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzA4MDEsImV4cCI6MjA4NTgwNjgwMX0.HSJbuCrnL7D3AlEpqlxq28yowHmUlqZyQSOCJRrmgOM'; // <--- INSIRA AQUI
-    
-    // Teste de conexão imediato
-let supabase;
-try {
-    const { createClient } = window.supabase;
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Sistema Supabase inicializado com sucesso.");
-} catch (e) {
-    alert("ERRO CRÍTICO NA CARGA DO SUPABASE: " + e.message);
-}
-
-    // 2. MAPEAMENTO DE ELEMENTOS
-    const authForm = document.getElementById('auth-form');
-    const authTitle = document.getElementById('auth-title');
-    const btnAuth = document.getElementById('btn-auth');
-    const toggleAuth = document.getElementById('toggle-auth');
-    const toggleText = document.getElementById('toggle-text');
-    const authAlert = document.getElementById('auth-alert');
-    let isLoginMode = true;
-
-    // 3. VERIFICAR SE JÁ EXISTE SESSÃO ATIVA (Evita login repetido)
-    async function checkExistingSession() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            console.log("Sessão ativa encontrada. Redirecionando...");
-            window.location.href = 'perfil.html';
-        }
-    }
-    checkExistingSession();
-
-    // 4. FUNÇÃO PARA EXIBIR ERROS NA TELA
-    function showError(message) {
-        authAlert.innerText = message;
-        authAlert.style.display = 'block';
-        setTimeout(() => { authAlert.style.display = 'none'; }, 5000);
-    }
-
-    // 5. ALTERNAR ENTRE LOGIN E CADASTRO
-    toggleAuth.addEventListener('click', (e) => {
-        e.preventDefault();
-        isLoginMode = !isLoginMode;
-        
-        authTitle.innerText = isLoginMode ? 'Acesse sua conta' : 'Crie sua conta de Corretor';
-        btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
-        toggleText.innerText = isLoginMode ? 'Ainda não tem acesso?' : 'Já possui uma conta?';
-        toggleAuth.innerText = isLoginMode ? 'Solicitar Cadastro Grátis' : 'Voltar para o Login';
-        authAlert.style.display = 'none';
-    });
-
-    // 6. LÓGICA DE SUBMISSÃO (DIAGNÓSTICO ROBUSTO)
-authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Feedback visual imediato
-    btnAuth.disabled = true;
-    btnAuth.innerText = 'Verificando no Servidor...';
-    console.log("Iniciando processo...");
-
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-
-    try {
-        if (isLoginMode) {
-            // TENTATIVA DE LOGIN
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-            if (error) {
-                console.error("Erro Supabase:", error);
-                alert("O SUPABASE RESPONDEU: " + error.message);
-                return;
-            }
-
-            // Se chegou aqui, logou!
-            alert("Login realizado com sucesso! Indo para o Perfil...");
-            window.location.href = 'perfil.html';
-
-        } else {
-            // TENTATIVA DE CADASTRO
-            const { data, error } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: { plano: 'FREE', role: 'USER' }
-                }
-            });
-
-            if (error) {
-                alert("ERRO NO CADASTRO: " + error.message);
-                return;
-            }
-
-            alert("Cadastro feito! Se não logou direto, verifique seu e-mail.");
-        }
-    } catch (err) {
-        // Erro de rede, CORS ou travamento do script
-        console.error("Erro Catastrófico:", err);
-        alert("ERRO DE COMUNICAÇÃO: O site não conseguiu falar com o banco de dados. Verifique sua URL/KEY do Supabase ou se sua internet tem firewall.");
-    } finally {
-        btnAuth.disabled = false;
-        btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
-    }
-});
-
-
-
-
+</body>
+</html>
