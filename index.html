@@ -100,68 +100,62 @@ try {
         authAlert.style.display = 'none';
     });
 
-    // 6. LÓGICA DE SUBMISSÃO (O MOTOR)
-    authForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Bloqueia o botão para evitar duplicidade
-        btnAuth.disabled = true;
-        btnAuth.innerText = 'Processando...';
-        authAlert.style.display = 'none';
+    // 6. LÓGICA DE SUBMISSÃO (DIAGNÓSTICO ROBUSTO)
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Feedback visual imediato
+    btnAuth.disabled = true;
+    btnAuth.innerText = 'Verificando no Servidor...';
+    console.log("Iniciando processo...");
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
 
-        try {
-            if (isLoginMode) {
-                // EXECUTAR LOGIN
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+    try {
+        if (isLoginMode) {
+            // TENTATIVA DE LOGIN
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
 
-                if (error) throw error;
-
-                // Sucesso: Redireciona
-                window.location.href = 'perfil.html';
-
-            } else {
-                // EXECUTAR CADASTRO
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: { 
-                            plano: 'FREE',
-                            role: 'USER'
-                        },
-                        // Define para onde o usuário volta se precisar confirmar e-mail
-                        emailRedirectTo: window.location.origin + '/perfil.html'
-                    }
-                });
-
-                if (error) throw error;
-
-                if (data.user && data.session) {
-                    // Se o Auto-confirm estiver ON, ele loga direto
-                    window.location.href = 'perfil.html';
-                } else {
-                    alert('Cadastro realizado! Por favor, verifique seu e-mail para ativar a conta.');
-                    isLoginMode = true;
-                    toggleAuth.click(); // Volta para tela de login
-                }
+            if (error) {
+                console.error("Erro Supabase:", error);
+                alert("O SUPABASE RESPONDEU: " + error.message);
+                return;
             }
-        } catch (err) {
-            console.error("Erro na autenticação:", err.message);
-            showError("Falha na autenticação: " + err.message);
-        } finally {
-            btnAuth.disabled = false;
-            btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
-        }
-    });
-</script>
 
-</body>
-</html>
+            // Se chegou aqui, logou!
+            alert("Login realizado com sucesso! Indo para o Perfil...");
+            window.location.href = 'perfil.html';
+
+        } else {
+            // TENTATIVA DE CADASTRO
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: { plano: 'FREE', role: 'USER' }
+                }
+            });
+
+            if (error) {
+                alert("ERRO NO CADASTRO: " + error.message);
+                return;
+            }
+
+            alert("Cadastro feito! Se não logou direto, verifique seu e-mail.");
+        }
+    } catch (err) {
+        // Erro de rede, CORS ou travamento do script
+        console.error("Erro Catastrófico:", err);
+        alert("ERRO DE COMUNICAÇÃO: O site não conseguiu falar com o banco de dados. Verifique sua URL/KEY do Supabase ou se sua internet tem firewall.");
+    } finally {
+        btnAuth.disabled = false;
+        btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
+    }
+});
+
 
 
