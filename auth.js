@@ -56,10 +56,17 @@
 
             try {
                 if (isLoginMode) {
+                    // TENTATIVA DE LOGIN
                     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    
                     if (error) throw error;
+
+                    // SUCESSO NO LOGIN: Redireciona para o Perfil
+                    console.log("Login OK! Redirecionando...");
                     window.location.href = 'perfil.html';
+
                 } else {
+                    // TENTATIVA DE CADASTRO
                     const { data, error } = await supabase.auth.signUp({
                         email, 
                         password,
@@ -79,3 +86,6 @@
         });
     }
 })();
+    }
+})();
+
