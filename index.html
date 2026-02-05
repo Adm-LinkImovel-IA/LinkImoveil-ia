@@ -47,6 +47,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="auth.js"></script>
+
 <script>
     // 1. CONFIGURAÇÃO DO AMBIENTE
     const SUPABASE_URL = 'https://xmjxfcwnytguwntvloja.supabase.co'; // <--- INSIRA AQUI
@@ -156,6 +158,7 @@ authForm.addEventListener('submit', async (e) => {
         btnAuth.innerText = isLoginMode ? 'Entrar no Sistema' : 'Finalizar Cadastro';
     }
 });
+
 
 
 
